@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
-import { UserPlus, Star } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 
 export default function Register() {
   const [formData, setFormData] = useState({

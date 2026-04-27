@@ -60,7 +60,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     res.status(201).json({ message: 'User created successfully', user: { id: user.id, email: user.email, role: user.role } });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: (error as any).errors });
     }
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -106,7 +106,7 @@ export const createStore = async (req: Request, res: Response): Promise<any> => 
         data: {
           value: validatedData.rating,
           storeId: store.id,
-          userId: req.user.id // The admin who created it or the owner? 
+          userId: (req as any).user.id // The admin who created it or the owner? 
           // Usually, a rating needs a user. Let's use the current user (the Admin).
         }
       });
@@ -115,7 +115,7 @@ export const createStore = async (req: Request, res: Response): Promise<any> => 
     res.status(201).json({ message: 'Store created successfully', store });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: (error as any).errors });
     }
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -195,7 +195,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
 
     // Check if user exists
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id: id as string } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -203,7 +203,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<any> => {
     // Delete user (associated store and ratings will be handled by cascade or manually if needed)
     // In our schema, we didn't specify onDelete: Cascade, so we might need to handle it.
     // Actually, let's just delete the user.
-    await prisma.user.delete({ where: { id } });
+    await prisma.user.delete({ where: { id: id as string } });
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
@@ -215,12 +215,12 @@ export const deleteStore = async (req: Request, res: Response): Promise<any> => 
   try {
     const { id } = req.params;
 
-    const store = await prisma.store.findUnique({ where: { id } });
+    const store = await prisma.store.findUnique({ where: { id: id as string } });
     if (!store) {
       return res.status(404).json({ error: 'Store not found' });
     }
 
-    await prisma.store.delete({ where: { id } });
+    await prisma.store.delete({ where: { id: id as string } });
 
     res.json({ message: 'Store deleted successfully' });
   } catch (error) {
@@ -248,12 +248,12 @@ export const deleteRating = async (req: Request, res: Response): Promise<any> =>
   try {
     const { id } = req.params;
 
-    const rating = await prisma.rating.findUnique({ where: { id } });
+    const rating = await prisma.rating.findUnique({ where: { id: id as string } });
     if (!rating) {
       return res.status(404).json({ error: 'Rating not found' });
     }
 
-    await prisma.rating.delete({ where: { id } });
+    await prisma.rating.delete({ where: { id: id as string } });
 
     res.json({ message: 'Rating deleted successfully' });
   } catch (error) {

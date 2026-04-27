@@ -74,7 +74,7 @@ export const updatePassword = async (req: AuthRequest, res: Response): Promise<a
     res.json({ message: 'Password updated successfully' });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: (error as any).errors });
     }
     res.status(500).json({ error: 'Internal Server Error' });
   }
