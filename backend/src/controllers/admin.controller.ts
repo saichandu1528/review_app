@@ -196,7 +196,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<any> => {
 
     // Check if user exists
     const user = await prisma.user.findUnique({ where: { id: id as string } });
-    if (t !user) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
