@@ -196,18 +196,29 @@ export const deleteUser = async (req: Request, res: Response): Promise<any> => {
 
     // Check if user exists
     const user = await prisma.user.findUnique({ where: { id: id as string } });
-    if (!user) {
+    if (t !user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Delete user (associated store and ratings will be handled by cascade or manually if needed)
-    // In our schema, we didn't specify onDelete: Cascade, so we might need to handle it.
-    // Actually, let's just delete the user.
+    // 1. Delete all ratings submitted by this user
+    await prisma.rating.deleteMany({ where: { userId: id as string } });
+
+    // 2. Check if this user owns a store (regardless of role string)
+    const store = await prisma.store.findUnique({ where: { ownerId: id as string } });
+    if (store) {
+      // Delete all ratings for that store first
+      await prisma.rating.deleteMany({ where: { storeId: store.id } });
+      // Then delete the store
+      await prisma.store.delete({ where: { id: store.id } });
+    }
+
+    // 3. Finally delete the user
     await prisma.user.delete({ where: { id: id as string } });
 
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'User and all related data deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Delete User Error:', error);
+    res.status(500).json({ error: 'Failed to delete user. They may have related data that cannot be removed.' });
   }
 };
 
@@ -220,11 +231,16 @@ export const deleteStore = async (req: Request, res: Response): Promise<any> => 
       return res.status(404).json({ error: 'Store not found' });
     }
 
+    // 1. Delete all ratings for this store first
+    await prisma.rating.deleteMany({ where: { storeId: id as string } });
+
+    // 2. Then delete the store
     await prisma.store.delete({ where: { id: id as string } });
 
-    res.json({ message: 'Store deleted successfully' });
+    res.json({ message: 'Store and related ratings deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Delete Store Error:', error);
+    res.status(500).json({ error: 'Failed to delete store. It may have related data that cannot be removed.' });
   }
 };
 
